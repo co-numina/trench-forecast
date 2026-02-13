@@ -19,6 +19,7 @@ import { HotTokensPanelLayer } from "@/lib/layers/hot-tokens-panel";
 import { HudLayer } from "@/lib/hud";
 import { TickerLayer } from "@/lib/ticker";
 import { FireworksLayer } from "@/lib/layers/fireworks";
+import { BannerPlaneLayer } from "@/lib/layers/banner-plane";
 import { OracleOverlayLayer } from "@/lib/layers/oracle-overlay";
 import { DocsOverlayLayer } from "@/lib/layers/docs-overlay";
 import { TokenDetailLayer } from "@/lib/layers/token-detail";
@@ -83,6 +84,7 @@ export default function TrenchForecast() {
     // Layers added back-to-front
     composer.addLayer(new StarsLayer());
     composer.addLayer(new MoonLayer());
+    composer.addLayer(new BannerPlaneLayer());
     composer.addLayer(new CloudsLayer());
     composer.addLayer(new ShootingStarsLayer());
     composer.addLayer(new FireworksLayer());
