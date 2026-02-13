@@ -20,6 +20,7 @@ import { HudLayer } from "@/lib/hud";
 import { TickerLayer } from "@/lib/ticker";
 import { FireworksLayer } from "@/lib/layers/fireworks";
 import { OracleOverlayLayer } from "@/lib/layers/oracle-overlay";
+import { DocsOverlayLayer } from "@/lib/layers/docs-overlay";
 import { TokenDetailLayer } from "@/lib/layers/token-detail";
 import { AnimationEngine } from "@/lib/engine/animation";
 import { cycleWeather, getWeatherParams } from "@/lib/engine/weather-state";
@@ -49,6 +50,9 @@ export default function TrenchForecast() {
   const oracleStateRef = useRef<OracleState>({ visible: false, loading: false, reading: null });
   const lastOracleCallRef = useRef(0);
   const oracleCacheRef = useRef<{ reading: string; timestamp: number } | null>(null);
+
+  // Docs overlay
+  const docsVisibleRef = useRef(false);
 
   // Token detail selection
   const selectedBuildingRef = useRef<number | null>(null);
@@ -92,6 +96,7 @@ export default function TrenchForecast() {
     composer.addLayer(new TickerLayer());
     composer.addLayer(new TokenDetailLayer());
     composer.addLayer(new OracleOverlayLayer());
+    composer.addLayer(new DocsOverlayLayer());
 
     rendererRef.current = renderer;
     gridRef.current = grid;
@@ -137,6 +142,7 @@ export default function TrenchForecast() {
         selectedBuilding: selectedBuildingRef.current,
         buildingPositions,
         sparklineData: sparklineDataRef.current.length >= 2 ? sparklineDataRef.current : undefined,
+        docsVisible: docsVisibleRef.current,
       };
 
       grid.clear();
@@ -213,6 +219,12 @@ export default function TrenchForecast() {
 
     // Keyboard handler
     const handleKey = (e: KeyboardEvent) => {
+      // Docs toggle [?]
+      if (e.key === "?") {
+        docsVisibleRef.current = !docsVisibleRef.current;
+        return;
+      }
+
       // Oracle toggle [I]
       if (e.key === "i" || e.key === "I") {
         if (oracleStateRef.current.visible) {
@@ -223,8 +235,12 @@ export default function TrenchForecast() {
         return;
       }
 
-      // Escape closes oracle or deselects building
+      // Escape closes docs, oracle, or deselects building
       if (e.key === "Escape") {
+        if (docsVisibleRef.current) {
+          docsVisibleRef.current = false;
+          return;
+        }
         if (oracleStateRef.current.visible) {
           oracleStateRef.current = { visible: false, loading: false, reading: null };
           return;
@@ -235,8 +251,8 @@ export default function TrenchForecast() {
         }
       }
 
-      // Don't process other keys if oracle overlay is open
-      if (oracleStateRef.current.visible) return;
+      // Don't process other keys if docs or oracle overlay is open
+      if (docsVisibleRef.current || oracleStateRef.current.visible) return;
 
       // Building selection [←] [→]
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {

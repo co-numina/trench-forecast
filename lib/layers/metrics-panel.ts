@@ -244,7 +244,7 @@ export class MetricsPanelLayer implements Layer {
     this.drawLabel(grid, hintsCol, bottomRow, "[W] Weather", LABEL_DIM);
     this.drawLabel(grid, hintsCol, bottomRow + 1, "[A] Auto/Manual", LABEL_DIM);
     this.drawLabel(grid, hintsCol, bottomRow + 2, "[←][→] Tokens", LABEL_DIM);
-    this.drawLabel(grid, hintsCol, bottomRow + 3, "[ESC] Close", LABEL_DIM);
+    this.drawLabel(grid, hintsCol, bottomRow + 3, "[?] Docs", LABEL_DIM);
 
     // Column 3+: Trend history — right next to hints
     const trendStartCol = hintsCol + 16; // hints are ~15 wide + 1 gap
