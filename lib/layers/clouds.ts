@@ -77,7 +77,8 @@ export class CloudsLayer implements Layer {
     }
 
     const isDark = state.weather === "THUNDERSTORM" || state.weather === "RAIN";
-    const cloudColor = isDark ? "#555" : "#999";
+    const isSnow = state.weather === "SNOW";
+    const cloudColor = isDark ? "#555" : isSnow ? "#778" : "#999";
 
     for (const cloud of this.clouds) {
       cloud.x += cloud.speed;
