@@ -94,8 +94,7 @@ export class BannerPlaneLayer implements Layer {
   private initialized = false;
 
   draw(grid: Grid, state: SceneState, tick: number) {
-    // Only ground in thunderstorm
-    if (state.weather === "THUNDERSTORM") return;
+    // Plane flies in all weather conditions (dimmed in bad weather)
 
     if (!this.initialized) {
       this.x = -PLANE_WIDTH; // plane starts just off left edge — appears in ~3 sec
@@ -114,13 +113,16 @@ export class BannerPlaneLayer implements Layer {
     // Determine sky clipping — don't render below building tops
     const maxRow = state.streetRow - 2;
 
-    // Weather dimming
+    // Weather dimming — plane always flies, just gets dimmer in bad weather
     const dim =
       state.weather === "PARTLY_CLOUDY" ||
       state.weather === "OVERCAST" ||
       state.weather === "RAIN" ||
-      state.weather === "SNOW";
-    const dimMult = state.weather === "OVERCAST" || state.weather === "RAIN" ? 0.5 : 0.7;
+      state.weather === "SNOW" ||
+      state.weather === "THUNDERSTORM";
+    const dimMult =
+      state.weather === "THUNDERSTORM" ? 0.4 :
+      state.weather === "OVERCAST" || state.weather === "RAIN" ? 0.5 : 0.7;
 
     const baseX = Math.floor(this.x);
 
