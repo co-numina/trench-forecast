@@ -1,36 +1,200 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║                                                                  ║
+  ║   ████████╗██████╗ ███████╗███╗   ██╗ ██████╗██╗  ██╗           ║
+  ║   ╚══██╔══╝██╔══██╗██╔════╝████╗  ██║██╔════╝██║  ██║           ║
+  ║      ██║   ██████╔╝█████╗  ██╔██╗ ██║██║     ███████║           ║
+  ║      ██║   ██╔══██╗██╔══╝  ██║╚██╗██║██║     ██╔══██║           ║
+  ║      ██║   ██║  ██║███████╗██║ ╚████║╚██████╗██║  ██║           ║
+  ║      ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝ ╚═════╝╚═╝  ╚═╝           ║
+  ║                                                                  ║
+  ║   ███████╗ ██████╗ ██████╗ ███████╗ ██████╗ █████╗ ███████╗████████╗ ║
+  ║   ██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗██╔════╝╚══██╔══╝ ║
+  ║   █████╗  ██║   ██║██████╔╝█████╗  ██║     ███████║███████╗   ██║    ║
+  ║   ██╔══╝  ██║   ██║██╔══██╗██╔══╝  ██║     ██╔══██║╚════██║   ██║    ║
+  ║   ██║     ╚██████╔╝██║  ██║███████╗╚██████╗██║  ██║███████║   ██║    ║
+  ║   ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝    ║
+  ║                                                                  ║
+  ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Real-time ASCII townscape visualization of the Solana memecoin trenches.**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Live** ─ [trench-forecast.vercel.app](https://trench-forecast.vercel.app)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+                +                              .           +
+            .       +          *                       .
+    +                  .                 +
+              *               .                    *
+        .          .---(-----)--.           +
+               (  (  .  .  )  )       .
+                `--(-------)--'
+                                  .---------.  .----.
+       .----.  .--------.       | $POPCAT  |  |    |  +
+       |    |  | $PEPE  |       | ████████ |  |    |
+       |    |  | ██████ |  .----|  ██  ██  |  | $WIF|
+       |    |  |  ██  █ |  |    |  ██  ██  |  | ███|
+  ─────┴────┴──┴────────┴──┴────┴─────────┴──┴────┴─────
+  ===|===o=========|=========o=====|=====o=========|====
+  ─── ─── ─── ─── ─── ─── ─── ─── ─── ─── ─── ───
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## What is this?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Trench Forecast renders live Solana memecoin market data as a living ASCII cityscape on an HTML canvas. Token volume becomes buildings. Buy/sell sentiment becomes weather. The whole thing runs at 30fps in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+  Buildings  =  Top tokens sorted by 1h volume
+  Height     =  Market cap
+  Windows    =  Buy ratio (lit windows = more buys)
+  Weather    =  Overall market sentiment
+  Street     =  Cars, trees, lamps, power lines
+```
 
-## Deploy on Vercel
+### Weather System
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Market sentiment maps to weather conditions that change the entire scene:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+  CLEAR          >65% buys    ─  the sun is out, degens are winning
+  PARTLY CLOUDY  55-65%       ─  some clouds rolling in
+  OVERCAST       45-55%       ─  neutral, sideways action
+  RAIN           35-45%       ─  sellers taking over
+  THUNDERSTORM   <35%         ─  bloodbath in the trenches
+  SNOW           low volume   ─  the trenches are quiet
+```
+
+---
+
+## Controls
+
+```
+  ┌──────────────────────────────────────┐
+  │  [W]    Cycle weather manually       │
+  │  [A]    Toggle auto/manual weather   │
+  │  [I]    Oracle Intel (AI briefing)   │
+  │  [←][→] Select token / building      │
+  │  [?]    Documentation overlay        │
+  │  [D]    Toggle data feed             │
+  │  [ESC]  Close panels                 │
+  └──────────────────────────────────────┘
+```
+
+### Oracle Intel
+
+Press `[I]` to consult the **Trench Oracle** ─ a Claude-powered AI that reads the current market state and delivers a witty briefing using weather/trench metaphors. Requires an `ANTHROPIC_API_KEY`.
+
+```
+  .----------.
+  |  TRENCH  |    "Partly cloudy with scattered rugs.
+  |   NEWS   |     $POPCAT holding the line at $1.2B
+  '----------'     while the rest of the trenches
+  [I] Intel        are getting soaked..."
+```
+
+---
+
+## Data Sources
+
+| Source | Data | Refresh |
+|--------|------|---------|
+| **Pump.fun** | Top runners, kings, trending tokens | 30s poll |
+| **DexScreener** | Volume, mcap, price enrichment | 30s poll |
+| **Dune Analytics** | 17 on-chain queries | 8h cache |
+
+Tokens are filtered to **>$10K mcap** and **>$1K 1h volume** to keep dead/rugged coins off the skyline.
+
+---
+
+## Architecture
+
+```
+  ┌─────────────────────────────────────────────────┐
+  │                    Browser                       │
+  │                                                  │
+  │   Canvas  <──  CanvasRenderer  <──  Grid[r][c]   │
+  │                      ↑                           │
+  │               SceneComposer                      │
+  │                      ↑                           │
+  │   ┌──────────────────┼──────────────────┐        │
+  │   │    14 Layers (back to front)        │        │
+  │   │                                     │        │
+  │   │    Stars ─> Moon ─> Clouds ─>       │        │
+  │   │    ShootingStars ─> Fireworks ─>    │        │
+  │   │    Birds ─> Buildings ─> Street ─>  │        │
+  │   │    Weather ─> MetricsPanel ─>       │        │
+  │   │    HotTokens ─> Ticker ─>           │        │
+  │   │    TokenDetail ─> Oracle ─> Docs    │        │
+  │   └─────────────────────────────────────┘        │
+  │                      ↑                           │
+  │            AnimationEngine (30fps)               │
+  │                      ↑                           │
+  │           startPolling() ─> /api/trench-state    │
+  └─────────────────────────────────────────────────┘
+                         │
+  ┌──────────────────────┼──────────────────────────┐
+  │              Next.js API Routes                  │
+  │                                                  │
+  │  GET  /api/trench-state   market aggregation     │
+  │  GET  /api/pump-proxy     pump.fun edge proxy    │
+  │  POST /api/oracle         Claude AI briefing     │
+  └─────────────────────────────────────────────────┘
+```
+
+Each frame: `Grid` clears → 14 layers draw characters back-to-front → `CanvasRenderer` paints every cell via `fillText`. DPR-aware scaling handles Retina displays. Responsive font sizing (13px desktop → 7px mobile).
+
+---
+
+## Tech Stack
+
+```
+  Next.js 16 ─────── App Router + Turbopack
+  TypeScript ─────── strict mode
+  HTML Canvas ────── monospace char grid, zero DOM elements
+  IBM Plex Mono ──── @fontsource
+  Claude Haiku 4.5 ─ Oracle AI via @anthropic-ai/sdk
+  Vercel ──────────── deployment + edge functions
+```
+
+---
+
+## Setup
+
+```bash
+git clone https://github.com/co-numina/trench-forecast.git
+cd trench-forecast
+npm install
+npm run dev
+```
+
+### Environment Variables
+
+```env
+# Optional ─ enables Oracle AI
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Optional ─ enables live Dune Analytics queries
+DUNE_API_KEY=...
+```
+
+Without keys the app runs on mock data. Oracle shows a "sleeping" message.
+
+### Deploy
+
+```bash
+npm run build
+# or
+vercel --prod
+```
+
+---
+
+```
+  .----------.
+  |  TRENCH  |
+  |   NEWS   |       @co_numina
+  '----------'       x.com/co_numina
+```
