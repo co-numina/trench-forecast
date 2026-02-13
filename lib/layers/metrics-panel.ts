@@ -1,0 +1,298 @@
+import type { Layer, SceneState } from "../renderer/scene";
+import type { Grid } from "../renderer/grid";
+import type { WeatherType, TrendSnapshot } from "../data/types";
+
+// ============================================================
+// Weather Icons — small ASCII art for each weather type
+// ============================================================
+
+const ICON_CLEAR: string[] = [
+  "  \\   |   /  ",
+  " --  .---.  --",
+  "    | o   |   ",
+  " --  '---'  --",
+  "  /   |   \\  ",
+];
+
+const ICON_PARTLY_CLOUDY: string[] = [
+  " -  (   .   ) - ",
+  " - ( .   . ) -  ",
+  " -  ( .  . ) -  ",
+  "     ---------  ",
+];
+
+const ICON_OVERCAST: string[] = [
+  "  .---(-----)--.  ",
+  " (  (  .  .  )  ) ",
+  "  `--(-------)--' ",
+];
+
+const ICON_RAIN: string[] = [
+  "   (  .---.  )  ",
+  "   ( .  .  . )  ",
+  "    ---------   ",
+  "    / /  / /    ",
+  "   / /  / /     ",
+];
+
+const ICON_THUNDERSTORM: string[] = [
+  "   (  .---.  )  ",
+  "   ( .  .  . )  ",
+  "    ---------   ",
+  "    / /_/ / /   ",
+  "   / / /_/ /    ",
+  "      /\\        ",
+];
+
+const ICON_SNOW: string[] = [
+  "   (  .---.  )  ",
+  "   ( .  .  . )  ",
+  "    ---------   ",
+  "    *  .  *     ",
+  "   .  *  .  *   ",
+];
+
+function getWeatherIcon(w: WeatherType): string[] {
+  switch (w) {
+    case "CLEAR": return ICON_CLEAR;
+    case "PARTLY_CLOUDY": return ICON_PARTLY_CLOUDY;
+    case "OVERCAST": return ICON_OVERCAST;
+    case "RAIN": return ICON_RAIN;
+    case "THUNDERSTORM": return ICON_THUNDERSTORM;
+    case "SNOW": return ICON_SNOW;
+  }
+}
+
+// ============================================================
+// Colors
+// ============================================================
+
+const PANEL_TEXT = "#a1a1aa";
+const LABEL_DIM = "#71717a";
+const VALUE_BRIGHT = "#e4e4e7";
+const SEPARATOR_COLOR = "#3f3f46";
+const GREEN = "#4ade80";
+const AMBER = "#fbbf24";
+const RED = "#f87171";
+const TREND_DIM = "#71717a";
+const TREND_CURRENT = "#a1a1aa";
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function formatVol(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${v.toFixed(0)}`;
+}
+
+
+function sentimentColor(ratio: number): string {
+  if (ratio > 60) return GREEN;
+  if (ratio >= 45) return AMBER;
+  return RED;
+}
+
+function weatherAbbrev(w: WeatherType): string {
+  switch (w) {
+    case "CLEAR": return "CLEAR";
+    case "PARTLY_CLOUDY": return "PT.CLOUD";
+    case "OVERCAST": return "OVERCAST";
+    case "RAIN": return "RAIN";
+    case "THUNDERSTORM": return "T-STORM";
+    case "SNOW": return "SNOW";
+  }
+}
+
+function timeAgo(ms: number): string {
+  const mins = Math.floor(ms / 60000);
+  if (mins <= 0) return "Now";
+  return `${mins}m ago`;
+}
+
+// ============================================================
+// Panel Layer
+// ============================================================
+
+export class MetricsPanelLayer implements Layer {
+  draw(grid: Grid, state: SceneState, tick: number) {
+    const market = state.trenchState?.market;
+    const startCol = 2;
+    const startRow = 2;
+
+    // Without data, show minimal panel
+    if (!market) {
+      this.drawNoDataPanel(grid, state, startCol, startRow);
+      return;
+    }
+
+    // --- Top Section: Weather Icon + Current Metrics ---
+    const icon = getWeatherIcon(state.weather);
+    const iconWidth = Math.max(...icon.map((l) => l.length));
+
+    // Draw weather icon
+    for (let r = 0; r < icon.length; r++) {
+      const line = icon[r];
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] !== " ") {
+          grid.set(startCol + i, startRow + r, line[i], PANEL_TEXT);
+        }
+      }
+    }
+
+    // Metrics to the right of the icon
+    const metricsCol = startCol + iconWidth + 2;
+    let metricsRow = startRow;
+
+    // Weather type label + mode tag
+    const modeTag = state.weatherMode === "MANUAL" ? " [MANUAL]" : " [AUTO]";
+    this.drawLabel(grid, metricsCol, metricsRow, "Trenches: ", LABEL_DIM);
+    this.drawLabel(grid, metricsCol + 10, metricsRow, weatherAbbrev(state.weather), VALUE_BRIGHT);
+    this.drawLabel(grid, metricsCol + 10 + weatherAbbrev(state.weather).length, metricsRow, modeTag, LABEL_DIM);
+    metricsRow++;
+
+    // Sentiment
+    this.drawLabel(grid, metricsCol, metricsRow, "Sentiment: ", LABEL_DIM);
+    const sentStr = `${market.buyRatio}% buys`;
+    this.drawLabel(grid, metricsCol + 11, metricsRow, sentStr, sentimentColor(market.buyRatio));
+    metricsRow++;
+
+    // Vol/5m
+    this.drawLabel(grid, metricsCol, metricsRow, "Vol/5m:    ", LABEL_DIM);
+    this.drawLabel(grid, metricsCol + 11, metricsRow, formatVol(market.totalVolume5m), VALUE_BRIGHT);
+    metricsRow++;
+
+    // Vol/1h
+    this.drawLabel(grid, metricsCol, metricsRow, "Vol/1h:    ", LABEL_DIM);
+    this.drawLabel(grid, metricsCol + 11, metricsRow, formatVol(market.totalVolume1h), VALUE_BRIGHT);
+    metricsRow++;
+
+    // Launched today
+    this.drawLabel(grid, metricsCol, metricsRow, "Launched:  ", LABEL_DIM);
+    const launchedStr = market.launchedToday != null
+      ? market.launchedToday.toLocaleString()
+      : "\u2014";
+    this.drawLabel(grid, metricsCol + 11, metricsRow, launchedStr, VALUE_BRIGHT);
+    metricsRow++;
+
+    // Graduated today
+    this.drawLabel(grid, metricsCol, metricsRow, "Graduated: ", LABEL_DIM);
+    const gradStr = market.graduatedToday != null
+      ? market.graduatedToday.toLocaleString()
+      : "\u2014";
+    this.drawLabel(grid, metricsCol + 11, metricsRow, gradStr, VALUE_BRIGHT);
+    metricsRow++;
+
+    // Grad rate
+    this.drawLabel(grid, metricsCol, metricsRow, "Grad rate: ", LABEL_DIM);
+    const rateStr = market.gradRate != null ? `${market.gradRate}%` : "\u2014";
+    const rateColor = market.gradRate != null
+      ? (market.gradRate >= 3 ? GREEN : market.gradRate >= 1.5 ? AMBER : RED)
+      : LABEL_DIM;
+    this.drawLabel(grid, metricsCol + 11, metricsRow, rateStr, rateColor);
+    metricsRow++;
+
+    // --- Sparkline: buy ratio over last hour ---
+    const sparkData = state.sparklineData;
+    if (sparkData && sparkData.length >= 2) {
+      metricsRow++; // blank line
+      const sparkChars = ["\u2581", "\u2582", "\u2583", "\u2584", "\u2585", "\u2586", "\u2587", "\u2588"];
+      const min = Math.min(...sparkData);
+      const max = Math.max(...sparkData);
+      const range = max - min || 1;
+      const spark = sparkData.map((v) => {
+        const idx = Math.floor(((v - min) / range) * 7);
+        return sparkChars[idx];
+      }).join("");
+
+      // Determine trend direction for color
+      const first = sparkData[0];
+      const last = sparkData[sparkData.length - 1];
+      const sparkColor = last > first + 2 ? GREEN : last < first - 2 ? RED : AMBER;
+
+      this.drawLabel(grid, metricsCol, metricsRow, "1h trend:  ", LABEL_DIM);
+      this.drawLabel(grid, metricsCol + 11, metricsRow, spark, sparkColor);
+      metricsRow++;
+    }
+
+    // --- Separator ---
+    const sepRow = Math.max(startRow + icon.length, metricsRow) + 1;
+    const panelWidth = 48;
+    for (let c = startCol; c < startCol + panelWidth && c < state.cols; c++) {
+      grid.set(c, sepRow, "\u2500", SEPARATOR_COLOR); // ─
+    }
+
+    // --- Bottom Section: Trend (only if wide enough) ---
+    if (state.cols < 120) return;
+
+    const trend = state.trendHistory;
+    if (trend.length === 0) return;
+
+    const trendRow = sepRow + 1;
+    const colWidth = 11;
+    const now = Date.now();
+
+    // Pad trend to always show 4 columns
+    const slots: (TrendSnapshot | null)[] = [null, null, null, null];
+    // Fill from the end — most recent is last slot
+    for (let i = 0; i < Math.min(trend.length, 4); i++) {
+      slots[4 - trend.length + i] = trend[i];
+    }
+
+    for (let s = 0; s < 4; s++) {
+      const col = startCol + s * colWidth;
+      const snap = slots[s];
+      const isCurrent = s === 3;
+      const color = isCurrent ? TREND_CURRENT : TREND_DIM;
+
+      if (!snap) {
+        // Empty slot
+        this.drawLabel(grid, col, trendRow, "---", TREND_DIM);
+        continue;
+      }
+
+      // Time label
+      const ago = isCurrent ? "Now" : timeAgo(now - snap.timestamp);
+      this.drawLabel(grid, col, trendRow, ago.padEnd(colWidth), color);
+
+      // Weather abbrev
+      this.drawLabel(grid, col, trendRow + 1, weatherAbbrev(snap.weatherType).padEnd(colWidth), color);
+
+      // Buy ratio
+      const ratioStr = `${snap.buyRatio}%`;
+      this.drawLabel(grid, col, trendRow + 2, ratioStr.padEnd(colWidth), sentimentColor(snap.buyRatio));
+
+      // Volume
+      this.drawLabel(grid, col, trendRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
+    }
+  }
+
+  private drawNoDataPanel(grid: Grid, state: SceneState, col: number, row: number) {
+    const icon = getWeatherIcon(state.weather);
+    for (let r = 0; r < icon.length; r++) {
+      const line = icon[r];
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] !== " ") {
+          grid.set(col + i, row + r, line[i], PANEL_TEXT);
+        }
+      }
+    }
+
+    const iconWidth = Math.max(...icon.map((l) => l.length));
+    const metricsCol = col + iconWidth + 2;
+    const modeTag = state.weatherMode === "MANUAL" ? " [MANUAL]" : " [AUTO]";
+    this.drawLabel(grid, metricsCol, row, "Trenches: " + weatherAbbrev(state.weather) + modeTag, VALUE_BRIGHT);
+    this.drawLabel(grid, metricsCol, row + 1, "[W] cycle weather", LABEL_DIM);
+    this.drawLabel(grid, metricsCol, row + 2, "[A] toggle auto/manual", LABEL_DIM);
+    this.drawLabel(grid, metricsCol, row + 3, "[D] toggle data", LABEL_DIM);
+  }
+
+  private drawLabel(grid: Grid, col: number, row: number, text: string, color: string) {
+    for (let i = 0; i < text.length; i++) {
+      if (col + i < grid.cols) {
+        grid.set(col + i, row, text[i], color);
+      }
+    }
+  }
+}
