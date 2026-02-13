@@ -49,9 +49,5 @@ export class TickerLayer implements Layer {
       grid.set(c, row, ch, TICKER_FG, TICKER_BG);
     }
 
-    // Footer label — row above ticker
-    const footer = " NARRA \u00D7 STACK ";
-    const footerCol = Math.floor((state.cols - footer.length) / 2);
-    grid.drawText(footerCol, state.rows - 2, footer, "#444", "#080808");
   }
 }
