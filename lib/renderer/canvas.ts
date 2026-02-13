@@ -20,6 +20,11 @@ export class CanvasRenderer {
     return `${this.fontSize}px '${this.fontFamily}', monospace`;
   }
 
+  setFontSize(size: number) {
+    this.fontSize = size;
+    this.measure();
+  }
+
   measure() {
     this.ctx.font = this.font;
     const m = this.ctx.measureText("M");
@@ -31,7 +36,7 @@ export class CanvasRenderer {
   calcGridSize(): { cols: number; rows: number } {
     const cols = Math.floor(this.canvas.width / this.charW);
     const rows = Math.floor(this.canvas.height / this.charH);
-    return { cols: Math.max(cols, 80), rows: Math.max(rows, 25) };
+    return { cols: Math.max(cols, 60), rows: Math.max(rows, 20) };
   }
 
   resizeCanvas() {

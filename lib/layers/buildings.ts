@@ -58,10 +58,12 @@ export class BuildingsLayer implements Layer {
   private smokeParticles: { x: number; y: number; life: number; char: string }[] = [];
 
   private buildBuildings(runners: Runner[], cols: number, state: SceneState) {
+    // Fewer buildings on narrow screens to prevent overlap
+    const maxForWidth = cols < 100 ? 5 : cols < 140 ? 7 : MAX_BUILDINGS;
     const sorted = [...runners]
       .filter((r) => (r.mcap || r.fdv || 0) >= 10_000) // skip dead/rugged tokens
       .sort((a, b) => (b.volume1h || 0) - (a.volume1h || 0))
-      .slice(0, MAX_BUILDINGS);
+      .slice(0, maxForWidth);
 
     const count = sorted.length;
 

@@ -64,7 +64,10 @@ export default function TrenchForecast() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = new CanvasRenderer(canvas, "IBM Plex Mono", 13);
+    // Responsive font size — scale down on smaller viewports so everything fits
+    const vw = window.innerWidth;
+    const fontSize = vw >= 1600 ? 13 : vw >= 1280 ? 11 : vw >= 1024 ? 10 : 9;
+    const renderer = new CanvasRenderer(canvas, "IBM Plex Mono", fontSize);
     renderer.resizeCanvas();
     const { cols, rows } = renderer.calcGridSize();
     const grid = new Grid(cols, rows);
@@ -141,10 +144,13 @@ export default function TrenchForecast() {
       rendererRef.current.render(grid);
     });
 
-    // Resize handler
+    // Resize handler — recalculate font size for new viewport
     const handleResize = () => {
       const r = rendererRef.current;
       if (!r) return;
+      const newVw = window.innerWidth;
+      const newFontSize = newVw >= 1600 ? 13 : newVw >= 1280 ? 11 : newVw >= 1024 ? 10 : 9;
+      r.setFontSize(newFontSize);
       r.resizeCanvas();
       const { cols, rows } = r.calcGridSize();
       gridRef.current?.resize(cols, rows);
