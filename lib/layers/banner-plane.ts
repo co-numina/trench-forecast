@@ -84,29 +84,21 @@ function getPlaneCharColor(ch: string): string {
 // ============================================================
 
 export class BannerPlaneLayer implements Layer {
-  // x tracks the LEFT edge of the whole unit (banner leads, plane trails)
-  // Layout: [BANNER_TEXT]---[PLANE]  moving left-to-right
-  // So the banner is at x, and the plane is at x + BANNER_TEXT.length
-  private x = -BANNER_TEXT.length - PLANE_WIDTH - 10;
-  private y = 5; // upper sky area
-  private speed = 0.07; // chars per tick (~2 chars/sec at 30fps)
+  // x tracks the LEFT edge of the whole unit (banner trails, plane leads)
+  // Layout: [BANNER_TEXT][PLANE]  moving left-to-right
+  // Banner is at x, plane is at x + BANNER_TEXT.length
+  private x = -PLANE_WIDTH; // start with just the plane off-screen (appears quickly)
+  private y = 4; // upper sky area
+  private speed = 0.18; // chars per tick (~5.4 chars/sec at 30fps)
   private pauseTimer = 0;
   private initialized = false;
 
   draw(grid: Grid, state: SceneState, tick: number) {
-    // Ground plane in heavy weather
-    const grounded =
-      state.weather === "THUNDERSTORM" ||
-      state.weather === "SNOW" ||
-      state.weather === "RAIN";
-
-    if (grounded) return;
-
-    // Hide in overcast too
-    if (state.weather === "OVERCAST") return;
+    // Only ground in thunderstorm
+    if (state.weather === "THUNDERSTORM") return;
 
     if (!this.initialized) {
-      this.x = -BANNER_TEXT.length - PLANE_WIDTH - 10;
+      this.x = -PLANE_WIDTH; // plane starts just off left edge — appears in ~3 sec
       this.initialized = true;
     }
 
@@ -122,8 +114,13 @@ export class BannerPlaneLayer implements Layer {
     // Determine sky clipping — don't render below building tops
     const maxRow = state.streetRow - 2;
 
-    // Weather dimming for partly cloudy
-    const dim = state.weather === "PARTLY_CLOUDY";
+    // Weather dimming
+    const dim =
+      state.weather === "PARTLY_CLOUDY" ||
+      state.weather === "OVERCAST" ||
+      state.weather === "RAIN" ||
+      state.weather === "SNOW";
+    const dimMult = state.weather === "OVERCAST" || state.weather === "RAIN" ? 0.5 : 0.7;
 
     const baseX = Math.floor(this.x);
 
@@ -141,7 +138,7 @@ export class BannerPlaneLayer implements Layer {
         if (drawX < 0 || drawX >= state.cols) continue;
 
         let color = getPlaneCharColor(ch);
-        if (dim) color = dimColor(color, 0.7);
+        if (dim) color = dimColor(color, dimMult);
         grid.set(drawX, drawY, ch, color);
       }
     }
@@ -157,7 +154,7 @@ export class BannerPlaneLayer implements Layer {
       if (bannerY < 0 || bannerY >= maxRow) continue;
 
       let color = getBannerCharColor(i);
-      if (dim) color = dimColor(color, 0.7);
+      if (dim) color = dimColor(color, dimMult);
       grid.set(drawX, bannerY, ch, color);
     }
 
@@ -165,7 +162,7 @@ export class BannerPlaneLayer implements Layer {
     const totalWidth = BANNER_TEXT.length + PLANE_WIDTH;
     if (baseX > state.cols + 10) {
       this.x = -totalWidth - 20;
-      this.pauseTimer = 150 + Math.floor(Math.random() * 150); // 5-10 sec at 30fps
+      this.pauseTimer = 200 + Math.floor(Math.random() * 200); // ~7-13 sec pause at 30fps
     }
   }
 }
