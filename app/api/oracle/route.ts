@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const anthropic = new Anthropic({ apiKey });
 
     const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: 400,
       system: `You are the Trench Oracle — a weathered market analyst who speaks about the Solana memecoin market using weather metaphors. You're cynical, witty, and street-smart. Give brief, punchy market briefings in 4-6 short sentences. Reference specific tokens by name when interesting. Use weather metaphors naturally (storms, clearing skies, etc). Never use emoji. Keep it under 250 words. You sound like a grizzled trader who's seen it all.`,
       messages: [{ role: "user", content: prompt }],
@@ -99,10 +99,11 @@ export async function POST(req: Request) {
       message.content[0].type === "text" ? message.content[0].text : "";
 
     return NextResponse.json({ reading });
-  } catch (err) {
-    console.error("Oracle API error:", err);
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("Oracle API error:", errMsg, err);
     return NextResponse.json(
-      { reading: "The oracle's crystal ball is cloudy. Try again in a moment." },
+      { reading: `The oracle's crystal ball is cloudy. (${errMsg.slice(0, 80)})` },
       { status: 500 }
     );
   }
