@@ -233,22 +233,26 @@ export class MetricsPanelLayer implements Layer {
       grid.set(c, sepRow, "\u2500", SEPARATOR_COLOR); // ─
     }
 
-    // --- Bottom Section: TV + hints on left, trend data on right ---
+    // --- Bottom Section: compact two-column layout ---
     const bottomRow = sepRow + 1;
 
-    // Oracle TV + key hints (left column, always shown)
+    // Left block: Oracle TV (4 rows) + [I] Intel + key hints
     this.drawOracleTV(grid, startCol, bottomRow, tick);
+    // [I] Intel is drawn by drawOracleTV at row + TV_ICON.length
+    // Key hints below that
     const hintRow = bottomRow + TV_ICON.length + 1;
     this.drawLabel(grid, startCol, hintRow, "[W] Weather", LABEL_DIM);
     this.drawLabel(grid, startCol, hintRow + 1, "[A] Auto/Manual", LABEL_DIM);
     this.drawLabel(grid, startCol, hintRow + 2, "[←][→] Tokens", LABEL_DIM);
     this.drawLabel(grid, startCol, hintRow + 3, "[ESC] Close", LABEL_DIM);
 
-    // Trend data (right of TV, if wide enough)
-    if (state.cols >= 120 && state.trendHistory.length > 0) {
+    // Right block: Trend history columns — packed right after TV/hints column
+    // TV icon is 12 wide + 2 gap = 14, so trend starts at startCol + 14
+    const trendStartCol = startCol + 14;
+    const colWidth = 10;
+
+    if (state.trendHistory.length > 0) {
       const trend = state.trendHistory;
-      const trendStartCol = startCol + 16; // right of TV icon area
-      const colWidth = 11;
       const now = Date.now();
 
       // Pad trend to always show 4 columns
@@ -259,6 +263,7 @@ export class MetricsPanelLayer implements Layer {
 
       for (let s = 0; s < 4; s++) {
         const col = trendStartCol + s * colWidth;
+        if (col + colWidth > state.cols) break; // don't overflow screen
         const snap = slots[s];
         const isCurrent = s === 3;
         const color = isCurrent ? TREND_CURRENT : TREND_DIM;
