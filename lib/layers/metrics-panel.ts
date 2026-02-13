@@ -233,32 +233,30 @@ export class MetricsPanelLayer implements Layer {
       grid.set(c, sepRow, "\u2500", SEPARATOR_COLOR); // ─
     }
 
-    // --- Bottom Section: compact two-column layout ---
+    // --- Bottom Section: 3-column layout, all on same rows ---
     const bottomRow = sepRow + 1;
 
-    // Left block: Oracle TV (4 rows) + [I] Intel + key hints
+    // Column 1: TV icon (12 wide) + [I] Intel below
     this.drawOracleTV(grid, startCol, bottomRow, tick);
-    // [I] Intel is drawn by drawOracleTV at row + TV_ICON.length
-    // Key hints below that
-    const hintRow = bottomRow + TV_ICON.length + 1;
-    this.drawLabel(grid, startCol, hintRow, "[W] Weather", LABEL_DIM);
-    this.drawLabel(grid, startCol, hintRow + 1, "[A] Auto/Manual", LABEL_DIM);
-    this.drawLabel(grid, startCol, hintRow + 2, "[←][→] Tokens", LABEL_DIM);
-    this.drawLabel(grid, startCol, hintRow + 3, "[ESC] Close", LABEL_DIM);
 
-    // Right block: Trend history columns — packed right after TV/hints column
-    // TV icon is 12 wide + 2 gap = 14, so trend starts at startCol + 14
-    const trendStartCol = startCol + 14;
+    // Column 2: Key hints — right next to TV icon, same rows
+    const hintsCol = startCol + 13; // TV is 12 wide + 1 gap
+    this.drawLabel(grid, hintsCol, bottomRow, "[W] Weather", LABEL_DIM);
+    this.drawLabel(grid, hintsCol, bottomRow + 1, "[A] Auto/Manual", LABEL_DIM);
+    this.drawLabel(grid, hintsCol, bottomRow + 2, "[←][→] Tokens", LABEL_DIM);
+    this.drawLabel(grid, hintsCol, bottomRow + 3, "[ESC] Close", LABEL_DIM);
+
+    // Column 3+: Trend history — right next to hints
+    const trendStartCol = hintsCol + 16; // hints are ~15 wide + 1 gap
     const colWidth = 10;
 
     if (state.trendHistory.length > 0) {
-      const trend = state.trendHistory.slice(-4); // last 4 snapshots max
+      const trend = state.trendHistory.slice(-4);
       const now = Date.now();
 
-      // Only render columns that have actual data — no empty "---" placeholders
       for (let s = 0; s < trend.length; s++) {
         const col = trendStartCol + s * colWidth;
-        if (col + colWidth > state.cols) break; // don't overflow screen
+        if (col + colWidth > state.cols) break;
         const snap = trend[s];
         const isCurrent = s === trend.length - 1;
         const color = isCurrent ? TREND_CURRENT : TREND_DIM;
