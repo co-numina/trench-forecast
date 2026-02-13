@@ -234,51 +234,58 @@ export class MetricsPanelLayer implements Layer {
     }
 
     // --- Bottom Section: Trend (only if wide enough) ---
-    if (state.cols < 120) return;
+    let nextRow = sepRow + 1;
 
-    const trend = state.trendHistory;
-    if (trend.length === 0) return;
+    if (state.cols >= 120 && state.trendHistory.length > 0) {
+      const trend = state.trendHistory;
+      const trendRow = sepRow + 1;
+      const colWidth = 11;
+      const now = Date.now();
 
-    const trendRow = sepRow + 1;
-    const colWidth = 11;
-    const now = Date.now();
-
-    // Pad trend to always show 4 columns
-    const slots: (TrendSnapshot | null)[] = [null, null, null, null];
-    // Fill from the end — most recent is last slot
-    for (let i = 0; i < Math.min(trend.length, 4); i++) {
-      slots[4 - trend.length + i] = trend[i];
-    }
-
-    for (let s = 0; s < 4; s++) {
-      const col = startCol + s * colWidth;
-      const snap = slots[s];
-      const isCurrent = s === 3;
-      const color = isCurrent ? TREND_CURRENT : TREND_DIM;
-
-      if (!snap) {
-        // Empty slot
-        this.drawLabel(grid, col, trendRow, "---", TREND_DIM);
-        continue;
+      // Pad trend to always show 4 columns
+      const slots: (TrendSnapshot | null)[] = [null, null, null, null];
+      // Fill from the end — most recent is last slot
+      for (let i = 0; i < Math.min(trend.length, 4); i++) {
+        slots[4 - trend.length + i] = trend[i];
       }
 
-      // Time label
-      const ago = isCurrent ? "Now" : timeAgo(now - snap.timestamp);
-      this.drawLabel(grid, col, trendRow, ago.padEnd(colWidth), color);
+      for (let s = 0; s < 4; s++) {
+        const col = startCol + s * colWidth;
+        const snap = slots[s];
+        const isCurrent = s === 3;
+        const color = isCurrent ? TREND_CURRENT : TREND_DIM;
 
-      // Weather abbrev
-      this.drawLabel(grid, col, trendRow + 1, weatherAbbrev(snap.weatherType).padEnd(colWidth), color);
+        if (!snap) {
+          // Empty slot
+          this.drawLabel(grid, col, trendRow, "---", TREND_DIM);
+          continue;
+        }
 
-      // Buy ratio
-      const ratioStr = `${snap.buyRatio}%`;
-      this.drawLabel(grid, col, trendRow + 2, ratioStr.padEnd(colWidth), sentimentColor(snap.buyRatio));
+        // Time label
+        const ago = isCurrent ? "Now" : timeAgo(now - snap.timestamp);
+        this.drawLabel(grid, col, trendRow, ago.padEnd(colWidth), color);
 
-      // Volume
-      this.drawLabel(grid, col, trendRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
+        // Weather abbrev
+        this.drawLabel(grid, col, trendRow + 1, weatherAbbrev(snap.weatherType).padEnd(colWidth), color);
+
+        // Buy ratio
+        const ratioStr = `${snap.buyRatio}%`;
+        this.drawLabel(grid, col, trendRow + 2, ratioStr.padEnd(colWidth), sentimentColor(snap.buyRatio));
+
+        // Volume
+        this.drawLabel(grid, col, trendRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
+      }
+
+      nextRow = trendRow + 5;
     }
 
-    // --- Oracle TV icon below trend ---
-    this.drawOracleTV(grid, startCol, trendRow + 5, tick);
+    // --- Oracle TV icon (always shown) ---
+    this.drawOracleTV(grid, startCol, nextRow, tick);
+
+    // --- Key hints below TV ---
+    const hintRow = nextRow + TV_ICON.length + 2;
+    this.drawLabel(grid, startCol, hintRow, "[W] Weather  [A] Auto/Manual", LABEL_DIM);
+    this.drawLabel(grid, startCol, hintRow + 1, "[←][→] Select token  [ESC] Close", LABEL_DIM);
   }
 
   private drawOracleTV(grid: Grid, col: number, row: number, tick: number) {
@@ -323,6 +330,7 @@ export class MetricsPanelLayer implements Layer {
     this.drawLabel(grid, metricsCol, row + 1, "[W] cycle weather", LABEL_DIM);
     this.drawLabel(grid, metricsCol, row + 2, "[A] toggle auto/manual", LABEL_DIM);
     this.drawLabel(grid, metricsCol, row + 3, "[D] toggle data", LABEL_DIM);
+    this.drawLabel(grid, metricsCol, row + 4, "[←][→] Select token  [ESC] Close", LABEL_DIM);
 
     // Oracle TV below
     this.drawOracleTV(grid, col, row + icon.length + 2, tick ?? 0);

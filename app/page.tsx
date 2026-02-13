@@ -319,8 +319,12 @@ export default function TrenchForecast() {
             ];
           }
 
-          // Record sparkline data point every SPARKLINE_INTERVAL
-          if (now - lastSparklineTimestamp.current >= SPARKLINE_INTERVAL || lastSparklineTimestamp.current === 0) {
+          // Record sparkline data point
+          // Fast-fill first 3 points (every poll cycle ~30s) so sparkline appears quickly,
+          // then switch to normal SPARKLINE_INTERVAL (5min) for the rest
+          const sparkLen = sparklineDataRef.current.length;
+          const sparkInterval = sparkLen < 3 ? 30_000 : SPARKLINE_INTERVAL;
+          if (now - lastSparklineTimestamp.current >= sparkInterval || lastSparklineTimestamp.current === 0) {
             lastSparklineTimestamp.current = now;
             sparklineDataRef.current = [
               ...sparklineDataRef.current.slice(-(MAX_SPARKLINE_POINTS - 1)),
