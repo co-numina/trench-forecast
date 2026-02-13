@@ -233,59 +233,49 @@ export class MetricsPanelLayer implements Layer {
       grid.set(c, sepRow, "\u2500", SEPARATOR_COLOR); // ─
     }
 
-    // --- Bottom Section: Trend (only if wide enough) ---
-    let nextRow = sepRow + 1;
+    // --- Bottom Section: TV + hints on left, trend data on right ---
+    const bottomRow = sepRow + 1;
 
+    // Oracle TV + key hints (left column, always shown)
+    this.drawOracleTV(grid, startCol, bottomRow, tick);
+    const hintRow = bottomRow + TV_ICON.length + 1;
+    this.drawLabel(grid, startCol, hintRow, "[W] Weather", LABEL_DIM);
+    this.drawLabel(grid, startCol, hintRow + 1, "[A] Auto/Manual", LABEL_DIM);
+    this.drawLabel(grid, startCol, hintRow + 2, "[←][→] Tokens", LABEL_DIM);
+    this.drawLabel(grid, startCol, hintRow + 3, "[ESC] Close", LABEL_DIM);
+
+    // Trend data (right of TV, if wide enough)
     if (state.cols >= 120 && state.trendHistory.length > 0) {
       const trend = state.trendHistory;
-      const trendRow = sepRow + 1;
+      const trendStartCol = startCol + 16; // right of TV icon area
       const colWidth = 11;
       const now = Date.now();
 
       // Pad trend to always show 4 columns
       const slots: (TrendSnapshot | null)[] = [null, null, null, null];
-      // Fill from the end — most recent is last slot
       for (let i = 0; i < Math.min(trend.length, 4); i++) {
         slots[4 - trend.length + i] = trend[i];
       }
 
       for (let s = 0; s < 4; s++) {
-        const col = startCol + s * colWidth;
+        const col = trendStartCol + s * colWidth;
         const snap = slots[s];
         const isCurrent = s === 3;
         const color = isCurrent ? TREND_CURRENT : TREND_DIM;
 
         if (!snap) {
-          // Empty slot
-          this.drawLabel(grid, col, trendRow, "---", TREND_DIM);
+          this.drawLabel(grid, col, bottomRow, "---", TREND_DIM);
           continue;
         }
 
-        // Time label
         const ago = isCurrent ? "Now" : timeAgo(now - snap.timestamp);
-        this.drawLabel(grid, col, trendRow, ago.padEnd(colWidth), color);
-
-        // Weather abbrev
-        this.drawLabel(grid, col, trendRow + 1, weatherAbbrev(snap.weatherType).padEnd(colWidth), color);
-
-        // Buy ratio
+        this.drawLabel(grid, col, bottomRow, ago.padEnd(colWidth), color);
+        this.drawLabel(grid, col, bottomRow + 1, weatherAbbrev(snap.weatherType).padEnd(colWidth), color);
         const ratioStr = `${snap.buyRatio}%`;
-        this.drawLabel(grid, col, trendRow + 2, ratioStr.padEnd(colWidth), sentimentColor(snap.buyRatio));
-
-        // Volume
-        this.drawLabel(grid, col, trendRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
+        this.drawLabel(grid, col, bottomRow + 2, ratioStr.padEnd(colWidth), sentimentColor(snap.buyRatio));
+        this.drawLabel(grid, col, bottomRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
       }
-
-      nextRow = trendRow + 5;
     }
-
-    // --- Oracle TV icon (always shown) ---
-    this.drawOracleTV(grid, startCol, nextRow, tick);
-
-    // --- Key hints below TV ---
-    const hintRow = nextRow + TV_ICON.length + 2;
-    this.drawLabel(grid, startCol, hintRow, "[W] Weather  [A] Auto/Manual", LABEL_DIM);
-    this.drawLabel(grid, startCol, hintRow + 1, "[←][→] Select token  [ESC] Close", LABEL_DIM);
   }
 
   private drawOracleTV(grid: Grid, col: number, row: number, tick: number) {
