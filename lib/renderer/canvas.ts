@@ -34,8 +34,12 @@ export class CanvasRenderer {
   }
 
   calcGridSize(): { cols: number; rows: number } {
-    const cols = Math.floor(this.canvas.width / this.charW);
-    const rows = Math.floor(this.canvas.height / this.charH);
+    // Use logical (CSS) pixels, not physical canvas pixels
+    const dpr = window.devicePixelRatio || 1;
+    const logicalW = this.canvas.width / dpr;
+    const logicalH = this.canvas.height / dpr;
+    const cols = Math.floor(logicalW / this.charW);
+    const rows = Math.floor(logicalH / this.charH);
     return { cols: Math.max(cols, 60), rows: Math.max(rows, 20) };
   }
 
