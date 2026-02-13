@@ -313,16 +313,17 @@ function formatAge(createdMs: number): string {
 // Weather classification
 // ─────────────────────────────────────────────────────────────
 function classifyWeather(buyRatio: number, volume5m: number): WeatherType {
-  // SNOW = dead market (really dead)
-  if (volume5m < 200_000) return "SNOW";
-  // THUNDERSTORM = heavy sell + decent volume
-  if (buyRatio < 38) return "THUNDERSTORM";
+  // SNOW = dead / low-volume market
+  if (volume5m < 500_000) return "SNOW";
+  // Wider bands centered around 50% so weather actually shifts
+  // THUNDERSTORM = heavy sell pressure
+  if (buyRatio < 43) return "THUNDERSTORM";
   // RAIN = sell pressure
-  if (buyRatio < 46) return "RAIN";
-  // OVERCAST = slight sell / neutral (narrower band: 46-52)
+  if (buyRatio < 48) return "RAIN";
+  // OVERCAST = slight sell / neutral
   if (buyRatio < 52) return "OVERCAST";
   // PARTLY_CLOUDY = slight buy
-  if (buyRatio < 60) return "PARTLY_CLOUDY";
+  if (buyRatio < 56) return "PARTLY_CLOUDY";
   // CLEAR = strong buy
   return "CLEAR";
 }

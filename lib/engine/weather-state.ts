@@ -17,11 +17,13 @@ export interface WeatherParams {
 
 export function classifyWeather(market: MarketState): WeatherType {
   const { buyRatio, totalVolume5m } = market;
-  if (totalVolume5m < 200_000) return "SNOW";
-  if (buyRatio < 38) return "THUNDERSTORM";
-  if (buyRatio < 46) return "RAIN";
+  // SNOW = dead / low-volume market
+  if (totalVolume5m < 500_000) return "SNOW";
+  // Wider bands centered around 50% so weather actually shifts
+  if (buyRatio < 43) return "THUNDERSTORM";
+  if (buyRatio < 48) return "RAIN";
   if (buyRatio < 52) return "OVERCAST";
-  if (buyRatio < 60) return "PARTLY_CLOUDY";
+  if (buyRatio < 56) return "PARTLY_CLOUDY";
   return "CLEAR";
 }
 
