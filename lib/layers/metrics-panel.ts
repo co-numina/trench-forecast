@@ -252,26 +252,16 @@ export class MetricsPanelLayer implements Layer {
     const colWidth = 10;
 
     if (state.trendHistory.length > 0) {
-      const trend = state.trendHistory;
+      const trend = state.trendHistory.slice(-4); // last 4 snapshots max
       const now = Date.now();
 
-      // Pad trend to always show 4 columns
-      const slots: (TrendSnapshot | null)[] = [null, null, null, null];
-      for (let i = 0; i < Math.min(trend.length, 4); i++) {
-        slots[4 - trend.length + i] = trend[i];
-      }
-
-      for (let s = 0; s < 4; s++) {
+      // Only render columns that have actual data — no empty "---" placeholders
+      for (let s = 0; s < trend.length; s++) {
         const col = trendStartCol + s * colWidth;
         if (col + colWidth > state.cols) break; // don't overflow screen
-        const snap = slots[s];
-        const isCurrent = s === 3;
+        const snap = trend[s];
+        const isCurrent = s === trend.length - 1;
         const color = isCurrent ? TREND_CURRENT : TREND_DIM;
-
-        if (!snap) {
-          this.drawLabel(grid, col, bottomRow, "---", TREND_DIM);
-          continue;
-        }
 
         const ago = isCurrent ? "Now" : timeAgo(now - snap.timestamp);
         this.drawLabel(grid, col, bottomRow, ago.padEnd(colWidth), color);
