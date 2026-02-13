@@ -15,24 +15,6 @@ const BRIGHT_COLOR = "#CCC";
 const TWINKLE_PERIOD = 80; // frames per twinkle cycle
 
 // ============================================================
-// Constellation patterns — small clusters of brighter stars
-// Positions are relative offsets [col, row] from a base point
-// ============================================================
-
-const CONSTELLATION_PATTERNS: number[][][] = [
-  // Little dipper shape
-  [[0, 0], [2, 1], [4, 0], [6, 1], [7, 3]],
-  // Triangle
-  [[0, 0], [3, -2], [6, 0]],
-  // Zigzag
-  [[0, 0], [2, -1], [4, 0], [6, -1]],
-  // Diamond
-  [[2, 0], [0, 1], [2, 2], [4, 1]],
-];
-
-const CONSTELLATION_COLOR = "#aaa";
-
-// ============================================================
 // City glow — faint horizon line above buildings
 // ============================================================
 
@@ -52,9 +34,6 @@ export class StarsLayer implements Layer {
   private lastCols = 0;
   private lastRows = 0;
 
-  // Constellations: stored as absolute positions after seeding
-  private constellationStars: { col: number; row: number }[] = [];
-
   // Satellite state
   private satelliteX = -10;
   private satelliteY = 3;
@@ -62,7 +41,6 @@ export class StarsLayer implements Layer {
 
   private seed(cols: number, rows: number) {
     this.stars = [];
-    this.constellationStars = [];
     this.lastCols = cols;
     this.lastRows = rows;
 
@@ -79,24 +57,6 @@ export class StarsLayer implements Layer {
             char: STAR_CHARS[hash % STAR_CHARS.length],
             phase: hash % TWINKLE_PERIOD,
           });
-        }
-      }
-    }
-
-    // Place constellations in the upper sky, spread across the width
-    const numConstellations = Math.min(4, Math.floor(cols / 30));
-    const sectionWidth = Math.floor(cols / (numConstellations + 1));
-
-    for (let i = 0; i < numConstellations; i++) {
-      const pattern = CONSTELLATION_PATTERNS[i % CONSTELLATION_PATTERNS.length];
-      const baseCol = sectionWidth * (i + 1) - 3 + ((i * 17) % 7);
-      const baseRow = 3 + ((i * 13) % (Math.floor(skyHeight * 0.4)));
-
-      for (const [dc, dr] of pattern) {
-        const c = baseCol + dc;
-        const r = baseRow + dr;
-        if (c >= 0 && c < cols && r >= 1 && r < skyHeight) {
-          this.constellationStars.push({ col: c, row: r });
         }
       }
     }
@@ -136,13 +96,6 @@ export class StarsLayer implements Layer {
       }
 
       grid.set(star.col, star.row, star.char, color);
-    }
-
-    // --- Constellation clusters (brighter, subtle) ---
-    if (!dimInRain && state.weather !== "SNOW") {
-      for (const cs of this.constellationStars) {
-        grid.set(cs.col, cs.row, "*", CONSTELLATION_COLOR);
-      }
     }
 
     // --- City glow horizon (just above buildings) ---

@@ -76,7 +76,10 @@ function getPlaneCharColor(ch: string): string {
 // ============================================================
 
 export class BannerPlaneLayer implements Layer {
-  private x = -PLANE_WIDTH - BANNER_TEXT.length - 10;
+  // x tracks the LEFT edge of the whole unit (banner leads, plane trails)
+  // Layout: [BANNER_TEXT]---[PLANE]  moving left-to-right
+  // So the banner is at x, and the plane is at x + BANNER_TEXT.length
+  private x = -BANNER_TEXT.length - PLANE_WIDTH - 10;
   private y = 5; // upper sky area
   private speed = 0.07; // chars per tick (~2 chars/sec at 30fps)
   private pauseTimer = 0;
@@ -91,11 +94,11 @@ export class BannerPlaneLayer implements Layer {
 
     if (grounded) return;
 
-    // Hide in overcast too — plane is hidden
+    // Hide in overcast too
     if (state.weather === "OVERCAST") return;
 
     if (!this.initialized) {
-      this.x = -PLANE_WIDTH - BANNER_TEXT.length - 10;
+      this.x = -BANNER_TEXT.length - PLANE_WIDTH - 10;
       this.initialized = true;
     }
 
@@ -114,8 +117,10 @@ export class BannerPlaneLayer implements Layer {
     // Weather dimming for partly cloudy
     const dim = state.weather === "PARTLY_CLOUDY";
 
-    // Draw plane body
-    const planeX = Math.floor(this.x);
+    const baseX = Math.floor(this.x);
+
+    // Plane is at the RIGHT (leading). It's at baseX + BANNER_TEXT.length
+    const planeX = baseX + BANNER_TEXT.length;
     for (let row = 0; row < PLANE.length; row++) {
       const drawY = this.y + row;
       if (drawY < 0 || drawY >= maxRow) continue;
@@ -133,32 +138,24 @@ export class BannerPlaneLayer implements Layer {
       }
     }
 
-    // Draw banner with per-character sine wave billow
-    const bannerStartX = planeX + PLANE_WIDTH;
-    const bannerBaseY = this.y + BANNER_ROW;
-
+    // Banner trails BEHIND the plane (to the left), flat — no billow
+    const bannerY = this.y + BANNER_ROW;
     for (let i = 0; i < BANNER_TEXT.length; i++) {
       const ch = BANNER_TEXT[i];
       if (ch === " ") continue;
 
-      // Sine wave: each character gets its own y offset
-      const wave = Math.sin(i * 0.15 + tick * 0.05);
-      const yOffset = Math.round(wave * 1); // -1, 0, or +1
-
-      const drawX = bannerStartX + i;
-      const drawY = bannerBaseY + yOffset;
-
+      const drawX = baseX + i;
       if (drawX < 0 || drawX >= state.cols) continue;
-      if (drawY < 0 || drawY >= maxRow) continue;
+      if (bannerY < 0 || bannerY >= maxRow) continue;
 
       let color = getBannerCharColor(i);
       if (dim) color = dimColor(color, 0.7);
-      grid.set(drawX, drawY, ch, color);
+      grid.set(drawX, bannerY, ch, color);
     }
 
-    // Wrap when fully off-screen to the right
-    const totalWidth = PLANE_WIDTH + BANNER_TEXT.length;
-    if (planeX > state.cols + 10) {
+    // Wrap when the plane (rightmost element) is fully off-screen
+    const totalWidth = BANNER_TEXT.length + PLANE_WIDTH;
+    if (baseX > state.cols + 10) {
       this.x = -totalWidth - 20;
       this.pauseTimer = 150 + Math.floor(Math.random() * 150); // 5-10 sec at 30fps
     }
