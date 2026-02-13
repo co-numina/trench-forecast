@@ -40,7 +40,7 @@ export class CanvasRenderer {
     const logicalH = this.canvas.height / dpr;
     const cols = Math.floor(logicalW / this.charW);
     const rows = Math.floor(logicalH / this.charH);
-    return { cols: Math.max(cols, 60), rows: Math.max(rows, 20) };
+    return { cols: Math.max(cols, 40), rows: Math.max(rows, 15) };
   }
 
   resizeCanvas() {
@@ -49,7 +49,8 @@ export class CanvasRenderer {
     this.canvas.height = window.innerHeight * dpr;
     this.canvas.style.width = window.innerWidth + "px";
     this.canvas.style.height = window.innerHeight + "px";
-    this.ctx.scale(dpr, dpr);
+    // Reset transform before scaling — prevents compounding on repeated resizes
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.measure();
   }
 
