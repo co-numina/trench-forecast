@@ -488,11 +488,24 @@ export async function fetchLiveState(): Promise<TrenchState> {
     });
   }
 
-  // Sort by 24h volume
-  const sortedRunners = Array.from(runnerMap.values())
-    .sort((a, b) => b.volume24h - a.volume24h);
+  // Filter out dead/rugged tokens: must have meaningful volume AND mcap
+  // Tokens with <$10K mcap or <$1K 1h volume are likely dead or rugged
+  const MIN_MCAP = 10_000;
+  const MIN_VOL_1H = 1_000;
 
-  // ─── Compute aggregates from ALL runners (not just top 8) ───
+  const qualifiedRunners = Array.from(runnerMap.values())
+    .filter((r) => {
+      const mcap = r.mcap || r.fdv || 0;
+      const vol1h = r.volume1h || 0;
+      // Keep if it has both minimum mcap AND minimum 1h volume
+      return mcap >= MIN_MCAP && vol1h >= MIN_VOL_1H;
+    });
+
+  // Sort by 1h volume (more responsive than 24h for trench tokens)
+  const sortedRunners = qualifiedRunners
+    .sort((a, b) => (b.volume1h || 0) - (a.volume1h || 0));
+
+  // ─── Compute aggregates from ALL qualified runners ───
   let totalBuys = 0;
   let totalSells = 0;
   let totalVol5m = 0;
@@ -512,10 +525,9 @@ export async function fetchLiveState(): Promise<TrenchState> {
     ? Math.round((totalBuys / (totalBuys + totalSells)) * 100)
     : 50;
 
-  // ─── Hot Tokens — top 10 by 1h volume (already filtered by blocklist) ───
+  // ─── Hot Tokens — top 10 by 1h volume (from qualified runners) ───
   const hotTokens: HotToken[] = sortedRunners
     .filter((r) => (r.volume1h || 0) > 10_000)
-    .sort((a, b) => (b.volume1h || 0) - (a.volume1h || 0))
     .slice(0, 10)
     .map((r) => ({
       symbol: r.symbol,

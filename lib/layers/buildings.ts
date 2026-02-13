@@ -59,7 +59,8 @@ export class BuildingsLayer implements Layer {
 
   private buildBuildings(runners: Runner[], cols: number, state: SceneState) {
     const sorted = [...runners]
-      .sort((a, b) => b.volume24h - a.volume24h)
+      .filter((r) => (r.mcap || r.fdv || 0) >= 10_000) // skip dead/rugged tokens
+      .sort((a, b) => (b.volume1h || 0) - (a.volume1h || 0))
       .slice(0, MAX_BUILDINGS);
 
     const count = sorted.length;
