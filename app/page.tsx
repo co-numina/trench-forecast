@@ -23,7 +23,7 @@ import { OracleOverlayLayer } from "@/lib/layers/oracle-overlay";
 import { TokenDetailLayer } from "@/lib/layers/token-detail";
 import { AnimationEngine } from "@/lib/engine/animation";
 import { cycleWeather, getWeatherParams } from "@/lib/engine/weather-state";
-import { startPolling } from "@/lib/data/api";
+import { fetchTrenchState, startPolling } from "@/lib/data/api";
 
 const TREND_INTERVAL = 15 * 60 * 1000; // 15 minutes
 const MAX_TREND_SNAPSHOTS = 4;
@@ -40,7 +40,7 @@ export default function TrenchForecast() {
   const engineRef = useRef<AnimationEngine | null>(null);
   const weatherRef = useRef<WeatherType>("CLEAR");
   const trenchStateRef = useRef<TrenchState | null>(null);
-  const dataEnabledRef = useRef(false);
+  const dataEnabledRef = useRef(true);
   const trendHistoryRef = useRef<TrendSnapshot[]>([]);
   const lastTrendTimestamp = useRef(0);
   const weatherModeRef = useRef<"AUTO" | "MANUAL">("AUTO");
@@ -279,6 +279,16 @@ export default function TrenchForecast() {
         dataEnabledRef.current = !dataEnabledRef.current;
         if (!dataEnabledRef.current) {
           trenchStateRef.current = null;
+        } else {
+          // Immediately fetch data when toggling on
+          fetchTrenchState().then((data) => {
+            if (dataEnabledRef.current) {
+              trenchStateRef.current = data;
+              if (weatherModeRef.current === "AUTO") {
+                weatherRef.current = data.market.weatherType;
+              }
+            }
+          }).catch(() => {});
         }
       }
     };
