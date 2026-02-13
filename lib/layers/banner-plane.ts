@@ -5,24 +5,32 @@ import type { Grid } from "../renderer/grid";
 // Plane ASCII art (6 rows tall)
 // ============================================================
 
+// Plane faces right →, banner attaches at row 2 (the --- rope row)
+// Reference layout from text banner.txt:
+//                           __
+//                  __      /  /
+//   ---[ ... ]--- / /___  /**/
+//                /_/^^+*#####*X
+//                       /  /\o
+//                      /--/
 const PLANE: string[] = [
-  "    __",
-  " _ / /",
-  "/_/**/",
-  "+*##*>",
-  "  /\\o ",
-  " /--/ ",
+  "          __",
+  " __      /  /",
+  " / /___  /**/",
+  "/_/^^+*#####*X",
+  "      /  /\\o",
+  "     /--/",
 ];
 
 const PLANE_WIDTH = Math.max(...PLANE.map((l) => l.length));
-const BANNER_ROW = 3; // row within PLANE where banner attaches
+const BANNER_ROW = 2; // row within PLANE where banner rope attaches
 
 // ============================================================
 // Banner content
 // ============================================================
 
 const FORECAST_CA = "XXXX...pump"; // replace with real CA when available
-const BANNER_TEXT = `---[ TRENCH FORECAST  $FORECAST  CA: ${FORECAST_CA} ]---=`;
+const BANNER_TEXT = `---[ TRENCH FORECAST  $FORECAST  CA: ${FORECAST_CA} ]---`;
 
 // Pre-compute color regions for banner text
 interface ColorRegion {
@@ -66,7 +74,7 @@ const PLANE_BODY = "#71717a";
 const PLANE_ACCENT = "#52525b";
 
 function getPlaneCharColor(ch: string): string {
-  if (ch === ">" || ch === "*" || ch === "#" || ch === "+") return PLANE_BODY;
+  if (ch === "X" || ch === "*" || ch === "#" || ch === "+" || ch === "^") return PLANE_BODY;
   if (ch === "\\" || ch === "/" || ch === "_" || ch === "o" || ch === "-") return PLANE_ACCENT;
   return PLANE_BODY;
 }
