@@ -38,7 +38,7 @@ const CRANE_FRAMES = [
   " _/|    ",
 ];
 
-const MAX_BUILDINGS = 10;
+const MAX_BUILDINGS = 8;
 
 function formatVolShort(v: number): string {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
@@ -59,7 +59,7 @@ export class BuildingsLayer implements Layer {
 
   private buildBuildings(runners: Runner[], cols: number, state: SceneState) {
     // Fewer buildings on narrow screens to prevent overlap
-    const maxForWidth = cols < 100 ? 5 : cols < 140 ? 7 : MAX_BUILDINGS;
+    const maxForWidth = cols < 100 ? 4 : cols < 130 ? 5 : cols < 160 ? 6 : MAX_BUILDINGS;
     const sorted = [...runners]
       .filter((r) => (r.mcap || r.fdv || 0) >= 10_000) // skip dead/rugged tokens
       .sort((a, b) => (b.volume1h || 0) - (a.volume1h || 0))
@@ -77,7 +77,7 @@ export class BuildingsLayer implements Layer {
     mcapSorted.forEach((r, i) => mcapRankMap.set(r.mint, i));
 
     // Assign building styles based on mcap rank (taller = higher mcap)
-    const gap = 1;
+    const gap = 3; // breathing room between buildings
     let totalWidth = 0;
     const styles = sorted.map((r) => {
       const mcapRank = mcapRankMap.get(r.mint) ?? count - 1;
@@ -85,6 +85,15 @@ export class BuildingsLayer implements Layer {
     });
     for (const s of styles) totalWidth += s.width;
     totalWidth += gap * Math.max(0, sorted.length - 1);
+
+    // If buildings still overflow, trim from the end
+    while (sorted.length > 2 && totalWidth > cols - 6) {
+      sorted.pop();
+      styles.pop();
+      totalWidth = 0;
+      for (const s of styles) totalWidth += s.width;
+      totalWidth += gap * Math.max(0, sorted.length - 1);
+    }
 
     let startX = Math.max(1, Math.floor((cols - totalWidth) / 2));
     if (totalWidth > cols - 4) startX = 2;
