@@ -76,6 +76,16 @@ const AMBER = "#fbbf24";
 const RED = "#f87171";
 const TREND_DIM = "#71717a";
 const TREND_CURRENT = "#a1a1aa";
+const ORACLE_TV_COLOR = "#52525b";
+const ORACLE_FLASH = "#fbbf24";
+
+// Small TV monitor icon — oracle intel
+const TV_ICON: string[] = [
+  ".----------.",
+  "|  TRENCH  |",
+  "|   NEWS   |",
+  "'----------'",
+];
 
 // ============================================================
 // Helpers
@@ -123,7 +133,7 @@ export class MetricsPanelLayer implements Layer {
 
     // Without data, show minimal panel
     if (!market) {
-      this.drawNoDataPanel(grid, state, startCol, startRow);
+      this.drawNoDataPanel(grid, state, startCol, startRow, tick);
       return;
     }
 
@@ -266,9 +276,36 @@ export class MetricsPanelLayer implements Layer {
       // Volume
       this.drawLabel(grid, col, trendRow + 3, formatVol(snap.volume5m).padEnd(colWidth), color);
     }
+
+    // --- Oracle TV icon below trend ---
+    this.drawOracleTV(grid, startCol, trendRow + 5, tick);
   }
 
-  private drawNoDataPanel(grid: Grid, state: SceneState, col: number, row: number) {
+  private drawOracleTV(grid: Grid, col: number, row: number, tick: number) {
+    // Flash the "?" inside the TV every ~1.5 seconds
+    const flashOn = Math.floor(tick / 22) % 3 !== 0;
+    const tvColor = flashOn ? ORACLE_FLASH : ORACLE_TV_COLOR;
+
+    for (let r = 0; r < TV_ICON.length; r++) {
+      const line = TV_ICON[r];
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] !== " ") {
+          grid.set(col + i, row + r, line[i], ORACLE_TV_COLOR);
+        }
+      }
+    }
+
+    // Flash the center text on the screen
+    if (flashOn) {
+      this.drawLabel(grid, col + 2, row + 1, " TRENCH ", tvColor);
+      this.drawLabel(grid, col + 2, row + 2, "  NEWS  ", tvColor);
+    }
+
+    // [I] Intel hint below
+    this.drawLabel(grid, col, row + TV_ICON.length, "[I] Intel", LABEL_DIM);
+  }
+
+  private drawNoDataPanel(grid: Grid, state: SceneState, col: number, row: number, tick?: number) {
     const icon = getWeatherIcon(state.weather);
     for (let r = 0; r < icon.length; r++) {
       const line = icon[r];
@@ -286,6 +323,9 @@ export class MetricsPanelLayer implements Layer {
     this.drawLabel(grid, metricsCol, row + 1, "[W] cycle weather", LABEL_DIM);
     this.drawLabel(grid, metricsCol, row + 2, "[A] toggle auto/manual", LABEL_DIM);
     this.drawLabel(grid, metricsCol, row + 3, "[D] toggle data", LABEL_DIM);
+
+    // Oracle TV below
+    this.drawOracleTV(grid, col, row + icon.length + 2, tick ?? 0);
   }
 
   private drawLabel(grid: Grid, col: number, row: number, text: string, color: string) {

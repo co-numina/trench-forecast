@@ -40,8 +40,6 @@ export interface SceneState {
   buildingPositions?: { col: number; width: number }[];
   /** Buy ratio sparkline history (rolling buffer of last 12 readings) */
   sparklineData?: number[];
-  /** Sky tint color for time-of-day effect */
-  skyTint?: string;
 }
 
 export interface Layer {

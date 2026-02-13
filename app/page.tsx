@@ -32,15 +32,6 @@ const MAX_SPARKLINE_POINTS = 12; // 1 hour of data
 const ORACLE_COOLDOWN = 30_000; // 30 seconds
 const ORACLE_CACHE_TTL = 60_000; // 60 seconds
 
-/** Get a subtle sky tint based on time of day */
-function getSkyTint(): string | undefined {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 7) return "#0a0a1a";     // Dawn
-  if (hour >= 7 && hour < 19) return "#0a0f1a";     // Day — very dark navy
-  if (hour >= 19 && hour < 20) return "#0f0a1a";    // Dusk — very dark purple
-  return undefined; // Night — pure black (default)
-}
-
 export default function TrenchForecast() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<CanvasRenderer | null>(null);
@@ -143,7 +134,6 @@ export default function TrenchForecast() {
         selectedBuilding: selectedBuildingRef.current,
         buildingPositions,
         sparklineData: sparklineDataRef.current.length >= 2 ? sparklineDataRef.current : undefined,
-        skyTint: getSkyTint(),
       };
 
       grid.clear();

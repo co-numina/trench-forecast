@@ -44,19 +44,6 @@ export class StarsLayer implements Layer {
   }
 
   draw(grid: Grid, state: SceneState, tick: number) {
-    // Apply subtle sky tint based on time of day
-    if (state.skyTint) {
-      const skyHeight = Math.floor(state.rows * 0.5);
-      for (let r = 0; r < skyHeight; r++) {
-        for (let c = 0; c < state.cols; c++) {
-          const cell = grid.get(c, r);
-          if (cell && cell.char === " " && !cell.bg) {
-            cell.bg = state.skyTint;
-          }
-        }
-      }
-    }
-
     // Hide stars in heavy weather
     if (state.weather === "OVERCAST" || state.weather === "THUNDERSTORM") return;
 
