@@ -18,7 +18,7 @@
   ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-**Real-time ASCII townscape visualization of the Solana memecoin trenches.**
+**$FORECAST ─ Real-time ASCII townscape visualization of the Solana memecoin trenches.**
 
 > **Live** ─ [trench-forecast.vercel.app](https://trench-forecast.vercel.app)
 
@@ -44,7 +44,7 @@
 
 ## What is this?
 
-Trench Forecast renders live Solana memecoin market data as a living ASCII cityscape on an HTML canvas. Token volume becomes buildings. Buy/sell sentiment becomes weather. The whole thing runs at 30fps in your browser.
+**Trench Forecast** (`$FORECAST`) renders live Solana memecoin market data as a living ASCII cityscape on an HTML canvas. Token volume becomes buildings. Buy/sell sentiment becomes weather. The whole thing runs at 30fps in your browser.
 
 ```
   Buildings  =  Top tokens sorted by 1h volume
@@ -194,7 +194,7 @@ vercel --prod
 
 ```
   .----------.
-  |  TRENCH  |
+  |  TRENCH  |       $FORECAST
   |   NEWS   |       @co_numina
   '----------'       x.com/co_numina
 ```
