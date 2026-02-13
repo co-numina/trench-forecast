@@ -320,16 +320,44 @@ export default function TrenchForecast() {
           }
 
           // Record sparkline data point
-          // Fast-fill first 3 points (every poll cycle ~30s) so sparkline appears quickly,
-          // then switch to normal SPARKLINE_INTERVAL (5min) for the rest
-          const sparkLen = sparklineDataRef.current.length;
-          const sparkInterval = sparkLen < 3 ? 30_000 : SPARKLINE_INTERVAL;
-          if (now - lastSparklineTimestamp.current >= sparkInterval || lastSparklineTimestamp.current === 0) {
+          // On first data, seed sparkline from cache or generate synthetic history
+          if (sparklineDataRef.current.length === 0) {
+            try {
+              const cached = sessionStorage.getItem("trench_sparkline");
+              if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length >= 2) {
+                  sparklineDataRef.current = parsed.slice(-MAX_SPARKLINE_POINTS);
+                }
+              }
+            } catch { /* ignore */ }
+
+            // If still empty, seed with synthetic points around current value
+            if (sparklineDataRef.current.length === 0) {
+              const base = data.market.buyRatio;
+              const seed: number[] = [];
+              for (let i = 0; i < 5; i++) {
+                seed.push(Math.max(0, Math.min(100, base + (Math.random() - 0.5) * 6)));
+              }
+              seed.push(base); // current value is last
+              sparklineDataRef.current = seed;
+            }
             lastSparklineTimestamp.current = now;
-            sparklineDataRef.current = [
-              ...sparklineDataRef.current.slice(-(MAX_SPARKLINE_POINTS - 1)),
-              data.market.buyRatio,
-            ];
+          } else {
+            // Normal collection: every poll cycle for first few, then SPARKLINE_INTERVAL
+            const sparkLen = sparklineDataRef.current.length;
+            const sparkInterval = sparkLen < 6 ? 30_000 : SPARKLINE_INTERVAL;
+            if (now - lastSparklineTimestamp.current >= sparkInterval) {
+              lastSparklineTimestamp.current = now;
+              sparklineDataRef.current = [
+                ...sparklineDataRef.current.slice(-(MAX_SPARKLINE_POINTS - 1)),
+                data.market.buyRatio,
+              ];
+              // Persist to sessionStorage
+              try {
+                sessionStorage.setItem("trench_sparkline", JSON.stringify(sparklineDataRef.current));
+              } catch { /* ignore */ }
+            }
           }
         }
       },
