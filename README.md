@@ -20,28 +20,6 @@
 
 **$FORECAST ─ Real-time ASCII townscape visualization of the Solana memecoin trenches.**
 
-> **Live** ─ [trench-forecast.vercel.app](https://trench-forecast.vercel.app)
-
-```
-                +                              .           +
-            .       +          *                       .
-    +                  .                 +
-              *               .                    *
-        .          .---(-----)--.           +
-               (  (  .  .  )  )       .
-                `--(-------)--'
-                                  .---------.  .----.
-       .----.  .--------.       | $POPCAT  |  |    |  +
-       |    |  | $PEPE  |       | ████████ |  |    |
-       |    |  | ██████ |  .----|  ██  ██  |  | $WIF|
-       |    |  |  ██  █ |  |    |  ██  ██  |  | ███|
-  ─────┴────┴──┴────────┴──┴────┴─────────┴──┴────┴─────
-  ===|===o=========|=========o=====|=====o=========|====
-  ─── ─── ─── ─── ─── ─── ─── ─── ─── ─── ─── ───
-```
-
----
-
 ## What is this?
 
 **Trench Forecast** (`$FORECAST`) renders live Solana memecoin market data as a living ASCII cityscape on an HTML canvas. Token volume becomes buildings. Buy/sell sentiment becomes weather. The whole thing runs at 30fps in your browser.
